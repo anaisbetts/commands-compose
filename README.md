@@ -1,12 +1,22 @@
 # commands-compose
 
-## Installation
+[![](https://jitpack.io/v/anaisbetts/commands-compose.svg)](https://jitpack.io/#anaisbetts/commands-compose)
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.slack.moshi/gson-interop.svg)](https://mvnrepository.com/artifact/com.slack.moshi/gson-interop)
 ```gradle
-dependencies {
-  implementation("dev.anais:commands:<version>")
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+
+  repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+  }
 }
 ```
 
-Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
+then in your app's build.gradle:
+
+```gradle
+dependencies {
+  implementation 'com.github.anaisbetts:commands-compose:VERSION'
+}
+```
