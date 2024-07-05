@@ -64,16 +64,17 @@ publishing {
 }
 
 dependencies {
-    implementation("androidx.compose.material3:material3-android:1.2.1")
-    implementation("androidx.compose.ui:ui-android:1.6.8")
-    implementation("androidx.compose.ui:ui-test-junit4-android:1.6.8")
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
 
     implementation(composeBom)
-    implementation("androidx.compose.runtime:runtime-android:1.6.8")
     androidTestImplementation(composeBom)
+    implementation("androidx.compose.runtime:runtime-android:1.6.8")
 
     testImplementation("junit:junit:4.13.2")
+
     androidTestImplementation("com.android.support.test:runner:1.0.2")
     androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4-android:1.6.8")
+    androidTestImplementation("androidx.compose.material3:material3-android:1.2.1")
+    androidTestImplementation("androidx.compose.ui:ui-android:1.6.8")
 }
