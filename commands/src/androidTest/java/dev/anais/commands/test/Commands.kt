@@ -10,7 +10,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import dev.anais.commands.rememberAction
+import dev.anais.commands.rememberCommand
 import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
@@ -33,21 +33,21 @@ class ComposeRunnerTest {
 
             // Create the Jetpack Compose view
             val myButton = @Composable {
-                Log.i("ActionRunner", "Composing our test!")
+                Log.i("CommandRunner", "Composing our test!")
 
-                val onClickAction = rememberAction("") {
+                val onClickCommand = rememberCommand("") {
                     flow.take(1).collect()
-                    return@rememberAction true
+                    return@rememberCommand true
                 }
 
-                Log.i("ActionRunner", "running! ${onClickAction.isRunning}")
+                Log.i("CommandRunner", "running! ${onClickCommand.isRunning}")
 
-                TextButton(onClick = onClickAction::tryRun, modifier = Modifier.testTag("button")) {
-                    if (onClickAction.isRunning) {
+                TextButton(onClick = onClickCommand::tryRun, modifier = Modifier.testTag("button")) {
+                    if (onClickCommand.isRunning) {
                         Text("Loading...")
-                    } else if (onClickAction.result?.isFailure == true) {
-                        Text("Didn't work: ${onClickAction.result!!.exceptionOrNull()!!.message}")
-                    } else if (onClickAction.result == null) {
+                    } else if (onClickCommand.result?.isFailure == true) {
+                        Text("Didn't work: ${onClickCommand.result!!.exceptionOrNull()!!.message}")
+                    } else if (onClickCommand.result == null) {
                         Text("Click me")
                     } else {
                         Text("We did it!")
@@ -84,22 +84,22 @@ class ComposeRunnerTest {
 
             // Create the Jetpack Compose view
             val myButton = @Composable {
-                Log.i("ActionRunner", "Composing our test!")
+                Log.i("CommandRunner", "Composing our test!")
 
-                val onClickAction = rememberAction("") {
+                val onClickCommand = rememberCommand("") {
                     callCount++
                     flow.take(1).collect()
-                    return@rememberAction true
+                    return@rememberCommand true
                 }
 
-                Log.i("ActionRunner", "running! ${onClickAction.isRunning}")
+                Log.i("CommandRunner", "running! ${onClickCommand.isRunning}")
 
-                TextButton(onClick = onClickAction::tryRun, modifier = Modifier.testTag("button")) {
-                    if (onClickAction.isRunning) {
+                TextButton(onClick = onClickCommand::tryRun, modifier = Modifier.testTag("button")) {
+                    if (onClickCommand.isRunning) {
                         Text("Loading...")
-                    } else if (onClickAction.result?.isFailure == true) {
-                        Text("Didn't work: ${onClickAction.result!!.exceptionOrNull()!!.message}")
-                    } else if (onClickAction.result == null) {
+                    } else if (onClickCommand.result?.isFailure == true) {
+                        Text("Didn't work: ${onClickCommand.result!!.exceptionOrNull()!!.message}")
+                    } else if (onClickCommand.result == null) {
                         Text("Click me")
                     } else {
                         Text("We did it!")
@@ -151,21 +151,21 @@ class ComposeRunnerTest {
             // Create the Jetpack Compose view
             val errMsg = "Aieeeee!"
             val myButton = @Composable {
-                Log.i("ActionRunner", "Composing our test!")
+                Log.i("CommandRunner", "Composing our test!")
 
-                val onClickAction = rememberAction("") {
+                val onClickCommand = rememberCommand("") {
                     flow.take(1).collect()
                     error(errMsg)
                 }
 
-                Log.i("ActionRunner", "running! ${onClickAction.isRunning}")
+                Log.i("CommandRunner", "running! ${onClickCommand.isRunning}")
 
-                TextButton(onClick = onClickAction::tryRun, modifier = Modifier.testTag("button")) {
-                    if (onClickAction.isRunning) {
+                TextButton(onClick = onClickCommand::tryRun, modifier = Modifier.testTag("button")) {
+                    if (onClickCommand.isRunning) {
                         Text("Loading...")
-                    } else if (onClickAction.result?.isFailure == true) {
-                        Text("Didn't work: ${onClickAction.result!!.exceptionOrNull()!!.message}")
-                    } else if (onClickAction.result == null) {
+                    } else if (onClickCommand.result?.isFailure == true) {
+                        Text("Didn't work: ${onClickCommand.result!!.exceptionOrNull()!!.message}")
+                    } else if (onClickCommand.result == null) {
                         Text("Click me")
                     } else {
                         Text("We did it!")

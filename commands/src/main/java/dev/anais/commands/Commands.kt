@@ -12,7 +12,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
 
-abstract class ActionRunner<T> {
+abstract class CommandRunner<T> {
     var result by mutableStateOf<Result<T>?>(null)
         private set
 
@@ -24,7 +24,7 @@ abstract class ActionRunner<T> {
 
     suspend fun run() {
         if (!mutex.tryLock()) {
-            error("ActionRunner is already running")
+            error("CommandRunner is already running")
         }
 
         try {
@@ -36,14 +36,14 @@ abstract class ActionRunner<T> {
 
                 isRunning = true
                 try {
-                    result = runCatching { onAction() }.also { result ->
+                    result = runCatching { onCommand() }.also { result ->
                         // rethrow CancellationException to break the loop,
                         // but only if the runner's context is no longer active.
                         if (!currentCoroutineContext().isActive) {
                             val ex = result.exceptionOrNull()
                             if (ex is CancellationException) throw ex
                             // Throw our own if the action returned normally but the runner is cancelled
-                            throw CancellationException("ActionRunner.run was cancelled", cause = ex)
+                            throw CancellationException("CommandRunner.run was cancelled", cause = ex)
                         }
 
                     }
@@ -61,18 +61,18 @@ abstract class ActionRunner<T> {
         runRequests.trySend(Unit) // ignore failed send
     }
 
-    protected abstract suspend fun onAction(): T
+    protected abstract suspend fun onCommand(): T
 }
 
-inline fun <T> ActionRunner(
+inline fun <T> CommandRunner(
     crossinline action: suspend () -> T
-): ActionRunner<T> = object : ActionRunner<T>() {
-    override suspend fun onAction(): T = action()
+): CommandRunner<T> = object : CommandRunner<T>() {
+    override suspend fun onCommand(): T = action()
 }
 
 @Composable
-fun <T> rememberAction(key: Any?, action: suspend () -> T): ActionRunner<T> {
-    val runner = remember(key) { ActionRunner(action) }
+fun <T> rememberCommand(key: Any?, action: suspend () -> T): CommandRunner<T> {
+    val runner = remember(key) { CommandRunner(action) }
     LaunchedEffect(runner) {
         runner.run()
     }
