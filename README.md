@@ -52,6 +52,8 @@ fun PokemonLookupPage() {
       onValueChange = { pokemonToFind = it }
     )
 
+    // Here, we can easily set up our UI based on the async state of
+    // our Command
     when {
       search.isRunning -> Text("Searching..."),
 
@@ -67,7 +69,7 @@ fun PokemonLookupPage() {
     }
 
     Button(
-      onClick = search,
+      onClick = search::tryRun,
       enabled = !search.isRunning
     ) {
       Text("Search for Pokemon")
