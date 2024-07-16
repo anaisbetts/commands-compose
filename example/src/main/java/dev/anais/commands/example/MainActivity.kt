@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -40,10 +39,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -52,13 +49,28 @@ import kotlin.coroutines.resumeWithException
 fun PokemonExamplePage() {
     var page by remember { mutableIntStateOf(0) }
 
+    //
+    // Commands aren't just for button clicks! They can be used to manage any
+    // async state that you want to recompose as its progress changes
+    //
+    // In our block, we can call any suspendable function
+    //
     val loadPokemonByPage = rememberCommand(key = page) { fetchPokemonList(page) }
 
+    //
+    // Since loadPokemonByPage's key is tied to the page number, it will
+    // update when the page changes. So, every time loadPokemonByPage
+    // updates, we want to run it to load new data
+    //
     LaunchedEffect(loadPokemonByPage) {
         loadPokemonByPage.tryRun()
     }
 
+    //
+    // This is a great pattern to handle all three states of a command!
+    //
     when {
+        // Pending
         loadPokemonByPage.isRunning -> {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -67,14 +79,20 @@ fun PokemonExamplePage() {
                 }
             }
         }
+
+        // Failed
         loadPokemonByPage.result?.isFailure == true -> {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // We could fetch the Exception text or type out of
+                    // loadPokemonByPage.result here to display more detailed
+                    // information
                     Text("It Just Didn't")
                     Text("🙁")
                 }
             }
         }
+        // It worked
         else -> {
             loadPokemonByPage.result?.getOrNull()?.let {
                 Column(modifier = Modifier.fillMaxSize()) {
@@ -89,6 +107,7 @@ fun PokemonExamplePage() {
                     }
 
                     Row(modifier = Modifier.padding(16.dp)) {
+                        // Here, we rely on loadPokemonByPage's key to update when the page changes
                         Button(onClick = { page-- }, enabled = it.hasPrev) {
                             Text("Previous")
                         }
@@ -105,6 +124,11 @@ fun PokemonExamplePage() {
 
 @Composable
 fun PokemonListTile(item: PokemonInfo, modifier: Modifier = Modifier) {
+    //
+    // Here's a more traditional use of rememberCommand, where we'll tie it to a
+    // button press. This incidentally guarantees that we will only have one instance
+    // in-flight, meaning that we can't be playing the same sound concurrently
+    //
     val playSound = rememberCommand("") { playSound(item.cries.latest) }
 
     // After 5 seconds of displaying an error, reset so we can try again
@@ -112,6 +136,10 @@ fun PokemonListTile(item: PokemonInfo, modifier: Modifier = Modifier) {
         if (playSound.result?.isFailure == false) return@LaunchedEffect
 
         delay(5*1000)
+
+        //
+        // This method resets the command to the same state as before we ran it
+        //
         playSound.reset()
     }
 
@@ -130,6 +158,9 @@ fun PokemonListTile(item: PokemonInfo, modifier: Modifier = Modifier) {
         }
 
         Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+            //
+            // Another example of the Command's "three states" pattern here!
+            //
             when {
                 playSound.result?.isFailure == true ->
                     Text("😤", style = MaterialTheme.typography.headlineLarge)
@@ -155,6 +186,9 @@ suspend fun fetchPokemonList(page: Int): PokemonList {
     val client = makeRetrofitClient()
     val offset = page * 20
     val list = client.getPokemonList(offset, 20)
+
+    // NB: To test the error handling in PokemonExamplePage, uncomment this line
+    //throw Exception("no")
 
     val items = coroutineScope {
         list.results.map {
@@ -185,6 +219,8 @@ suspend fun playSound(soundUrl: String) {
                     task.resumeWithException(Exception("Failed to play sound: $what"))
                     true
                 }
+
+                task.invokeOnCancellation { stop() }
             }
         }
     } finally {
