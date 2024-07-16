@@ -57,9 +57,9 @@ fun PokemonLookupPage() {
     when {
       search.isRunning -> Text("Searching..."),
 
-      search.result.isFailure -> Text("It didn't work!"),
+      search.result?.isFailure == true -> Text("It didn't work!"),
 
-      default -> {
+      else -> {
         LazyColumn {
           items(search.result?.getOrNull() ?: emptyList()) { pokemon ->
             Text("${pokemon.Name} - ${pokemon.Information}")
@@ -78,3 +78,7 @@ fun PokemonLookupPage() {
 
 }
 ```
+
+## More examples?
+
+For a more comprehensive example, check out [the example project in the library](https://github.com/anaisbetts/commands-compose/blob/main/example/src/main/java/dev/anais/commands/example/MainActivity.kt)
