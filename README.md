@@ -59,13 +59,16 @@ fun PokemonLookupPage() {
 
       search.hasFailed -> Text("It didn't work!"),
 
-      else -> {
+      search.hasValue -> {
         LazyColumn {
-          items(search.result?.getOrNull() ?: emptyList()) { pokemon ->
+          items(search.require.size) { i ->
+            val pokemon = search.require[i]
             Text("${pokemon.Name} - ${pokemon.Information}")
           }
         }
-      }
+      },
+
+      else -> Button(onClick = search::tryRun) { Text("Do it") }
     }
 
     Button(
