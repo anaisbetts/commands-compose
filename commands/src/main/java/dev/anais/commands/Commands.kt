@@ -28,22 +28,22 @@ abstract class CommandRunner<T> {
     /**
      * If the command has run but has failed, this will be true.
      */
-    val hasFailed: Boolean get() = result?.isFailure == true
+    val hasFailed: Boolean inline get() = result?.isFailure == true
 
     /**
      * If the command has run and has a value, this will be true.
      */
-    val hasValue: Boolean get() = result?.isSuccess == true
+    val hasValue: Boolean inline get() = result?.isSuccess == true
 
     /**
      * If the command hasn't run yet, this will be true.
      */
-    val notStarted: Boolean get() = result == null
+    val notStarted: Boolean inline get() = result == null
 
     /**
      * The result of the command, or an error if the command failed. If the command hasn't run yet, this will throw.
      */
-    val require: T get() = result?.getOrNull() ?: error("CommandRunner has no result")
+    val require: T inline get() = result?.getOrNull() ?: error("CommandRunner has no result")
 
     private val runRequests = Channel<Unit>(1)
     private val mutex = Mutex()
