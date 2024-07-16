@@ -81,7 +81,7 @@ fun PokemonExamplePage() {
         }
 
         // Failed
-        loadPokemonByPage.result?.isFailure == true -> {
+        loadPokemonByPage.hasFailed -> {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     // We could fetch the Exception text or type out of
@@ -93,7 +93,7 @@ fun PokemonExamplePage() {
             }
         }
         // It worked
-        else -> {
+        loadPokemonByPage.hasValue -> {
             loadPokemonByPage.result?.getOrNull()?.let {
                 Column(modifier = Modifier.fillMaxSize()) {
                     val pokemon = it.items
@@ -133,7 +133,7 @@ fun PokemonListTile(item: PokemonInfo, modifier: Modifier = Modifier) {
 
     // After 5 seconds of displaying an error, reset so we can try again
     LaunchedEffect(playSound.result?.isFailure) {
-        if (playSound.result?.isFailure == false) return@LaunchedEffect
+        if (!playSound.hasFailed) return@LaunchedEffect
 
         delay(5*1000)
 
@@ -162,7 +162,7 @@ fun PokemonListTile(item: PokemonInfo, modifier: Modifier = Modifier) {
             // Another example of the Command's "three states" pattern here!
             //
             when {
-                playSound.result?.isFailure == true ->
+                playSound.hasFailed ->
                     Text("😤", style = MaterialTheme.typography.headlineLarge)
                 else ->
                     Button(onClick = playSound::tryRun, enabled = !playSound.isRunning) {
