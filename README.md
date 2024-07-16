@@ -57,7 +57,7 @@ fun PokemonLookupPage() {
     when {
       search.isRunning -> Text("Searching..."),
 
-      search.result?.isFailure == true -> Text("It didn't work!"),
+      search.hasFailed -> Text("It didn't work!"),
 
       else -> {
         LazyColumn {

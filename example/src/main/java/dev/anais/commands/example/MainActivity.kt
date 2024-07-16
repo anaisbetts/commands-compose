@@ -81,7 +81,7 @@ fun PokemonExamplePage() {
         }
 
         // Failed
-        loadPokemonByPage.result?.isFailure == true -> {
+        loadPokemonByPage.hasFailed -> {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     // We could fetch the Exception text or type out of
@@ -93,28 +93,26 @@ fun PokemonExamplePage() {
             }
         }
         // It worked
-        else -> {
-            loadPokemonByPage.result?.getOrNull()?.let {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    val pokemon = it.items
+        loadPokemonByPage.hasValue -> {
+            Column(modifier = Modifier.fillMaxSize()) {
+                val pokemon = loadPokemonByPage.require.items
 
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Image(painter = painterResource(R.drawable.pokeapi), contentDescription = null, modifier = Modifier.padding(vertical = 16.dp).height(48.dp))
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Image(painter = painterResource(R.drawable.pokeapi), contentDescription = null, modifier = Modifier.padding(vertical = 16.dp).height(48.dp))
+                }
+
+                LazyColumn(modifier = Modifier.weight(1.0f)) {
+                    items(pokemon.size) { i -> PokemonListTile(pokemon[i], modifier = Modifier.fillMaxWidth()) }
+                }
+
+                Row(modifier = Modifier.padding(16.dp)) {
+                    // Here, we rely on loadPokemonByPage's key to update when the page changes
+                    Button(onClick = { page-- }, enabled = loadPokemonByPage.require.hasPrev) {
+                        Text("Previous")
                     }
 
-                    LazyColumn(modifier = Modifier.weight(1.0f)) {
-                        items(pokemon.size) { i -> PokemonListTile(pokemon[i], modifier = Modifier.fillMaxWidth()) }
-                    }
-
-                    Row(modifier = Modifier.padding(16.dp)) {
-                        // Here, we rely on loadPokemonByPage's key to update when the page changes
-                        Button(onClick = { page-- }, enabled = it.hasPrev) {
-                            Text("Previous")
-                        }
-
-                        Button(onClick = { page++ }, enabled = it.hasNext, modifier = Modifier.padding(start = 16.dp)) {
-                            Text("Next")
-                        }
+                    Button(onClick = { page++ }, enabled = loadPokemonByPage.require.hasNext, modifier = Modifier.padding(start = 16.dp)) {
+                        Text("Next")
                     }
                 }
             }
@@ -133,7 +131,7 @@ fun PokemonListTile(item: PokemonInfo, modifier: Modifier = Modifier) {
 
     // After 5 seconds of displaying an error, reset so we can try again
     LaunchedEffect(playSound.result?.isFailure) {
-        if (playSound.result?.isFailure == false) return@LaunchedEffect
+        if (!playSound.hasFailed) return@LaunchedEffect
 
         delay(5*1000)
 
@@ -162,7 +160,7 @@ fun PokemonListTile(item: PokemonInfo, modifier: Modifier = Modifier) {
             // Another example of the Command's "three states" pattern here!
             //
             when {
-                playSound.result?.isFailure == true ->
+                playSound.hasFailed ->
                     Text("😤", style = MaterialTheme.typography.headlineLarge)
                 else ->
                     Button(onClick = playSound::tryRun, enabled = !playSound.isRunning) {
