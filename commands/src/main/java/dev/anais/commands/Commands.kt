@@ -13,15 +13,25 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
 
 abstract class CommandRunner<T> {
+    /**
+     * The result of the command, either a value or the error thrown by the block.
+     */
     var result by mutableStateOf<Result<T>?>(null)
         private set
 
+    /**
+     * Whether the command is currently running.
+     */
     var isRunning by mutableStateOf(false)
         private set
 
     private val runRequests = Channel<Unit>(1)
     private val mutex = Mutex()
 
+
+    /**
+     * Executes the command action and returns the result. You likely want tryRun instead.
+     */
     suspend fun run() {
         if (!mutex.tryLock()) {
             error("CommandRunner is already running")
@@ -57,10 +67,16 @@ abstract class CommandRunner<T> {
         }
     }
 
+    /**
+     * Tries to run the command action. If the command is already running, this does nothing.
+     */
     fun tryRun() {
         runRequests.trySend(Unit) // ignore failed send
     }
 
+    /*
+     * Resets the command runner to its initial state, clearing any result.
+     */
     fun reset() {
         result = null
     }
@@ -74,6 +90,21 @@ inline fun <T> CommandRunner(
     override suspend fun onCommand(): T = action()
 }
 
+
+/**
+ * Initializes a [CommandRunner] for executing asynchronous operations within a Composable function.
+ *
+ * Sets up a [CommandRunner] instance to execute the asynchronous operation defined by the [action] lambda.
+ * This is where you define the asynchronous operation that the [CommandRunner] will execute, and then you
+ * will typically call `runner.tryRun()` to start the operation, then get the result in `runner.result`.
+ *
+ * @param T The type of the result produced by the asynchronous operation.
+ * @param key An optional key to uniquely identify and remember the [CommandRunner] instance. Changing this key
+ *            will result in the creation of a new [CommandRunner] instance.
+ * @param action The suspend function to be executed, encapsulated within the [CommandRunner]. This function
+ *               should define the asynchronous operation and return a result of type [T].
+ * @return A [CommandRunner] instance
+ */
 @Composable
 fun <T> rememberCommand(key: Any?, action: suspend () -> T): CommandRunner<T> {
     val runner = remember(key) { CommandRunner(action) }
