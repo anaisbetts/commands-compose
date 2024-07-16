@@ -1,4 +1,4 @@
-# Commands for Jetpack Compose - a Jetpack Compose library for handling asynchronous requests
+# Commands - a Jetpack Compose library for handling asynchronous requests
 
 [![](https://jitpack.io/v/anaisbetts/commands-compose.svg)](https://jitpack.io/#anaisbetts/commands-compose)
 
