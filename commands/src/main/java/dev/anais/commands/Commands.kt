@@ -40,6 +40,11 @@ abstract class CommandRunner<T> {
      */
     val notStarted: Boolean get() = result == null
 
+    /**
+     * The result of the command, or an error if the command failed. If the command hasn't run yet, this will throw.
+     */
+    val require: T get() = result?.getOrNull() ?: error("CommandRunner has no result")
+
     private val runRequests = Channel<Unit>(1)
     private val mutex = Mutex()
 

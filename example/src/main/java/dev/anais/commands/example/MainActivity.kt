@@ -94,27 +94,25 @@ fun PokemonExamplePage() {
         }
         // It worked
         loadPokemonByPage.hasValue -> {
-            loadPokemonByPage.result?.getOrNull()?.let {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    val pokemon = it.items
+            Column(modifier = Modifier.fillMaxSize()) {
+                val pokemon = loadPokemonByPage.require.items
 
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Image(painter = painterResource(R.drawable.pokeapi), contentDescription = null, modifier = Modifier.padding(vertical = 16.dp).height(48.dp))
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Image(painter = painterResource(R.drawable.pokeapi), contentDescription = null, modifier = Modifier.padding(vertical = 16.dp).height(48.dp))
+                }
+
+                LazyColumn(modifier = Modifier.weight(1.0f)) {
+                    items(pokemon.size) { i -> PokemonListTile(pokemon[i], modifier = Modifier.fillMaxWidth()) }
+                }
+
+                Row(modifier = Modifier.padding(16.dp)) {
+                    // Here, we rely on loadPokemonByPage's key to update when the page changes
+                    Button(onClick = { page-- }, enabled = loadPokemonByPage.require.hasPrev) {
+                        Text("Previous")
                     }
 
-                    LazyColumn(modifier = Modifier.weight(1.0f)) {
-                        items(pokemon.size) { i -> PokemonListTile(pokemon[i], modifier = Modifier.fillMaxWidth()) }
-                    }
-
-                    Row(modifier = Modifier.padding(16.dp)) {
-                        // Here, we rely on loadPokemonByPage's key to update when the page changes
-                        Button(onClick = { page-- }, enabled = it.hasPrev) {
-                            Text("Previous")
-                        }
-
-                        Button(onClick = { page++ }, enabled = it.hasNext, modifier = Modifier.padding(start = 16.dp)) {
-                            Text("Next")
-                        }
+                    Button(onClick = { page++ }, enabled = loadPokemonByPage.require.hasNext, modifier = Modifier.padding(start = 16.dp)) {
+                        Text("Next")
                     }
                 }
             }
