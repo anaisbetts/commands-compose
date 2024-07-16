@@ -14,36 +14,45 @@ import kotlinx.coroutines.sync.Mutex
 
 abstract class CommandRunner<T> {
     /**
+     * The state of the command.
+     */
+    var state by mutableStateOf<CommandStatus<T>>(CommandStatus.Idle)
+        private set
+
+    /**
      * The result of the command, either a value or the error thrown by the block.
      */
-    var result by mutableStateOf<Result<T>?>(null)
-        private set
+    val result get() = state.toResult()
 
     /**
      * Whether the command is currently running.
      */
-    var isRunning by mutableStateOf(false)
-        private set
+    val isRunning get() = state is CommandStatus.Running
+
 
     /**
      * If the command has run but has failed, this will be true.
      */
-    val hasFailed: Boolean inline get() = result?.isFailure == true
+    val hasFailed: Boolean get() = state is CommandStatus.Failure
 
     /**
      * If the command has run and has a value, this will be true.
      */
-    val hasValue: Boolean inline get() = result?.isSuccess == true
+    val hasValue: Boolean get() = state is CommandStatus.Success<*>
 
     /**
      * If the command hasn't run yet, this will be true.
      */
-    val notStarted: Boolean inline get() = result == null
+    val notStarted: Boolean get() = state is CommandStatus.Idle
 
     /**
      * The result of the command, or an error if the command failed. If the command hasn't run yet, this will throw.
      */
-    val require: T inline get() = result?.getOrNull() ?: error("CommandRunner has no result")
+    @Suppress("UNCHECKED_CAST")
+    val require: T
+        get() = requireNotNull(state as? CommandStatus.Success<*>) {
+            "CommandRunner has no result"
+        }.data as T
 
     private val runRequests = Channel<Unit>(1)
     private val mutex = Mutex()
@@ -64,21 +73,29 @@ abstract class CommandRunner<T> {
                 // Push a dummy item on the queue to prevent any other runs from queuing
                 runRequests.send(Unit)
 
-                isRunning = true
+                state = CommandStatus.Running
                 try {
-                    result = runCatching { onCommand() }.also { result ->
+                    runCatching { onCommand() }.also { result ->
                         // rethrow CancellationException to break the loop,
                         // but only if the runner's context is no longer active.
                         if (!currentCoroutineContext().isActive) {
                             val ex = result.exceptionOrNull()
                             if (ex is CancellationException) throw ex
                             // Throw our own if the action returned normally but the runner is cancelled
-                            throw CancellationException("CommandRunner.run was cancelled", cause = ex)
+                            throw CancellationException(
+                                "CommandRunner.run was cancelled",
+                                cause = ex
+                            )
                         }
-
+                    }.onSuccess { data ->
+                        state = CommandStatus.Success(data)
+                    }.onFailure { throwable ->
+                        state = CommandStatus.Failure(throwable)
                     }
+                } catch (e: Throwable) {
+                    state = CommandStatus.Failure(e)
+                    throw e
                 } finally {
-                    isRunning = false
                     runRequests.tryReceive()
                 }
             }
@@ -98,7 +115,7 @@ abstract class CommandRunner<T> {
      * Resets the command runner to its initial state, clearing any result.
      */
     fun reset() {
-        result = null
+        state = CommandStatus.Idle
     }
 
     protected abstract suspend fun onCommand(): T
