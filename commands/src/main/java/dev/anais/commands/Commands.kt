@@ -61,6 +61,10 @@ abstract class CommandRunner<T> {
         runRequests.trySend(Unit) // ignore failed send
     }
 
+    fun reset() {
+        result = null
+    }
+
     protected abstract suspend fun onCommand(): T
 }
 
