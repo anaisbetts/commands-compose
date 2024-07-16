@@ -6,6 +6,6 @@ pluginManagement {
 }
 
 include(
-    ":commands"
+    ":commands",
+    ":example"
 )
-include(":example")
