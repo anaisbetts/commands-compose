@@ -71,6 +71,8 @@ fun PokemonLookupPage() {
       else -> Button(onClick = search::tryRun) { Text("Do it") }
     }
 
+    // The most important part - Commands gives you back the onClick
+    // event handler
     Button(
       onClick = search::tryRun,
       enabled = !search.isRunning
