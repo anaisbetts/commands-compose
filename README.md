@@ -55,9 +55,9 @@ fun PokemonLookupPage() {
     // Here, we can easily set up our UI based on the async state of
     // our Command
     when {
-      search.isRunning -> Text("Searching..."),
+      search.isRunning -> Text("Searching...")
 
-      search.hasFailed -> Text("It didn't work!"),
+      search.hasFailed -> Text("It didn't work!")
 
       search.hasValue -> {
         LazyColumn {
@@ -66,7 +66,7 @@ fun PokemonLookupPage() {
             Text("${pokemon.Name} - ${pokemon.Information}")
           }
         }
-      },
+      }
 
       else -> Button(onClick = search::tryRun) { Text("Do it") }
     }
